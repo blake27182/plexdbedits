@@ -70,23 +70,17 @@ def unset_poster(video):
     # print('unset poster for', video)
 
 
-def get_video_by_location(full_path, section_name=None, section_id=None):
-    file_name = os.path.basename(full_path).split('.')[0]
+def get_video_by_location(full_path):
     server = get_server()
-    if section_name:
-        results = server.library.section(section_name).all()
-    elif section_id:
-        results = server.library.sectionByID(section_id).all()
-    else:
-        results = server.library.search(file_name)
+    results = server.library.all()
     for result in results:
         try:
             if full_path in result.locations:
+                # if kind == 'show':
                 return result
         except AttributeError:
             continue
-    print(file_name, results)
-    raise Exception(f'cannot find video by location: {full_path}')
+    raise Exception(f'cannot find video by location: {full_path} : {results}')
 
 
 def scan_library(section_name=None, section_id=None):
