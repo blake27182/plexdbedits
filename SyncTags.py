@@ -1,11 +1,20 @@
+import os
+
 import PlexAdapter
 from CoreUtilities import load_yamls
 
 
 def sync_all_metadata(config_folder):
-    actor_dbs, safe_sections, video_tags = load_yamls(config_folder)
+    actor_dbs, safe_sections, video_tags, plex_config = load_yamls(config_folder)
 
-    for safe_section in safe_sections:
+    if plex_config:
+        if 'served_thumbs' in plex_config:
+            PlexAdapter.base_thumbnail_path = plex_config['served_thumbs']
+        if 'local_thumbs' in plex_config:
+            PlexAdapter.base_local_thumb = plex_config['local_thumbs']
+        PlexAdapter.pms_base_url = f'http://{plex_config["ip"]}:{plex_config["port"]}'
+
+    for section_id, safe_section in safe_sections.items():
         section = safe_section['spec']['name']
         if section.isnumeric():
             params = {'section_id': section}
@@ -20,11 +29,15 @@ def sync_all_metadata(config_folder):
             PlexAdapter.reset_all_titles_in_section(**params)
 
     for video_tag in video_tags:
-        video = PlexAdapter.get_video_by_location(video_tag['metadata']['location'])
+        video = PlexAdapter.get_video_by_location(
+            os.path.join(safe_sections[video_tag['metadata']['section_id']]['spec']['plex_location'],
+                         video_tag['metadata']['location'])
+        )
         if video_tag['kind'] == 'ShowTag':
             actors = build_show_actors(video_tag)
         else:
             actors = video_tag['spec']['actors']
+        print(f'setting tags on {video}')
         set_actors(video, actors, actor_dbs[video_tag['metadata']['actor_db']])
         set_common_conditionals(video, video_tag['spec'])
 
@@ -62,7 +75,10 @@ def set_common_conditionals(video, video_tag):
 def set_actors(video, actors, actor_db):
     unset_actors(video)
     for actor in reversed(actors):
-        thumbnail = actor_db['spec']['actor_thumbs'][actor]
+        try:
+            thumbnail = actor_db['spec']['actor_thumbs'][actor]
+        except KeyError:
+            raise KeyError(f'could not find actor from {video} {actor} in {actor_db["metadata"]["name"]}')
         PlexAdapter.set_actor(video, actor, thumbnail)
 
 
@@ -93,4 +109,4 @@ def build_show_actors(show_tag):
 
 
 if __name__ == '__main__':
-    sync_all_metadata('/Volumes/home/Plex/HomeVideos/CustomMetadata/configs')
+    sync_all_metadata('/Volumes/alexandria-i.synology.me/home/Plex/HomeVideos/CustomMetadata/configs')

@@ -2,15 +2,13 @@ import os
 from plexapi.server import PlexServer
 
 
-base_thumbnail_path = 'http://localhost:8060'
-base_local_thumb = '/Volumes/home/Plex/HomeVideos/CustomMetadata/Thumbnails'
-by_disk_section_name = 'Home Videos by Disk'
-by_disk_section_id = 13
-hv_section_ids = [13, 14]
+base_thumbnail_path = ''
+base_local_thumb = ''
+pms_base_url = ''
 
 
 def get_server():
-    return PlexServer(baseurl="http://192.168.1.190:32400", token=os.environ["PLEX_TOKEN"])
+    return PlexServer(baseurl=pms_base_url, token=os.environ["PLEX_TOKEN"])
 
 
 def unmatch_all_in_section(section_name=None, section_id=None):

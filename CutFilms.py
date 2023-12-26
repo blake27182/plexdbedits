@@ -6,9 +6,9 @@ from CoreUtilities import load_yamls
 
 
 def cut_films(config_folder, overwrite=True, testing=True):
-    if overwrite:
+    if overwrite and not testing:
         print('############### OVERWRITE ENABLED ###############')
-    actor_dbs, safe_sections, video_tags = load_yamls(config_folder)
+    actor_dbs, safe_sections, video_tags, plex_config = load_yamls(config_folder)
 
     for video_tag in video_tags:
         if video_tag['kind'] == 'ShowTag' and 'sources' in video_tag['spec']:
@@ -40,6 +40,7 @@ def cut_films(config_folder, overwrite=True, testing=True):
                         raise Exception(f'negative duration at {error_tag}')
 
                     out_dir = os.path.join(
+                        safe_sections[video_tag['metadata']['section_id']]['spec']['output_location'],
                         video_tag["metadata"]['location'],
                         f'Season {i+1:0>2}'
                     )
@@ -106,4 +107,5 @@ def get_datetime(t_string, error_tag=None):
 
 
 if __name__ == '__main__':
-    cut_films('/Volumes/home/Plex/HomeVideos/CustomMetadata/configs', overwrite=True, testing=False)
+    # cut_films('/Volumes/alexandria-i.synology.me/home/Plex/HomeVideos/CustomMetadata/configs', testing=True)
+    cut_films('/Volumes/alexandria-i.synology.me/home/Plex/HomeVideos/CustomMetadata/configs/1993-show.yml', testing=False)
